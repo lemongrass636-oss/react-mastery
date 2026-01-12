@@ -1,29 +1,32 @@
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router';
+import { LoginPage } from './features/auth/LoginPage';
+import { PostsPage } from './features/posts/PostsPage';
 import { useAuthStore } from './store/useAuthStore';
 
 function App() {
-  const { user, isAuthenticated, login, logout } = useAuthStore();
-
-  const handleLogin = () => {
-    // 本来はAPIを叩きますが、まずはモックデータでテスト
-    login({ id: '1', name: 'Gemini User', email: 'test@example.com' });
-  };
+  const { isAuthenticated, logout } = useAuthStore();
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Auth Test with Zustand</h1>
-      
-      {isAuthenticated ? (
-        <div>
-          <p>Welcome, {user?.name}!</p>
-          <button onClick={logout}>Logout</button>
-        </div>
-      ) : (
-        <div>
-          <p>Please log in.</p>
-          <button onClick={handleLogin}>Login</button>
-        </div>
-      )}
-    </div>
+    <BrowserRouter>
+      <nav style={{ padding: '1rem', borderBottom: '1px solid #ccc' }}>
+        <Link to="/">Login</Link> | <Link to="/posts">Posts</Link>
+        {isAuthenticated && (
+          <button onClick={logout} style={{ marginLeft: '1rem' }}>Logout</button>
+        )}
+      </nav>
+
+      <div style={{ padding: '1rem' }}>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          
+          {/* 認証ガード: ログインしてなければログイン画面へリダイレクト */}
+          <Route 
+            path="/posts" 
+            element={isAuthenticated ? <PostsPage /> : <Navigate to="/" />} 
+          />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 

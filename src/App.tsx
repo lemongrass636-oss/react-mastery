@@ -1,69 +1,71 @@
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router';
 import { useAuthStore } from './store/useAuthStore';
-
-// 各機能のコンポーネントをインポート
 import { LoginPage } from './features/auth/LoginPage';
 import { PostsPage } from './features/posts/PostsPage';
 import { ContactPage } from './features/contact/ContactPage';
 
 function App() {
-  // Zustandから認証状態とログアウト関数を取得
   const { isAuthenticated, logout, user } = useAuthStore();
 
   return (
     <BrowserRouter>
-      {/* ナビゲーションバー */}
-      <nav style={{ 
-        padding: '1rem', 
-        borderBottom: '1px solid #ddd', 
-        display: 'flex', 
-        gap: '1rem', 
-        alignItems: 'center',
-        backgroundColor: '#f9f9f9' 
-      }}>
-        <Link to="/" style={{ fontWeight: 'bold', textDecoration: 'none', color: '#333' }}>
-          My App
-        </Link>
-        
-        <Link to="/posts">Posts (Query)</Link>
-        <Link to="/contact">Contact (Form)</Link>
+      {/* ナビゲーションバー：背景白、影あり、上部に固定、ぼかし効果 */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            
+            {/* 左側：ロゴとメニュー */}
+            <div className="flex items-center gap-8">
+              <Link to="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                My App
+              </Link>
+              <div className="hidden md:flex gap-6">
+                <Link to="/posts" className="text-gray-600 hover:text-blue-600 font-medium transition">Posts</Link>
+                <Link to="/contact" className="text-gray-600 hover:text-blue-600 font-medium transition">Contact</Link>
+              </div>
+            </div>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {isAuthenticated ? (
-            <>
-              <span>Hi, <strong>{user?.name}</strong></span>
-              <button onClick={logout} style={{ cursor: 'pointer' }}>Logout</button>
-            </>
-          ) : (
-            <Link to="/">Login</Link>
-          )}
+            {/* 右側：ユーザー情報とボタン */}
+            <div className="flex items-center gap-4">
+              {isAuthenticated ? (
+                <div className="flex items-center gap-4">
+                  <span className="hidden sm:inline text-sm text-gray-500">
+                    Welcome, <span className="font-semibold text-gray-900">{user?.name}</span>
+                  </span>
+                  <button 
+                    onClick={logout}
+                    className="bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-all border border-transparent hover:border-red-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link 
+                  to="/" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md shadow-blue-200 transition"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
+
+          </div>
         </div>
       </nav>
 
-      {/* メインコンテンツエリア */}
-      <main style={{ padding: '2rem' }}>
-        <Routes>
-          {/* ログインページ */}
-          <Route path="/" element={<LoginPage />} />
-
-          {/* お問い合わせページ (誰でもアクセス可能) */}
-          <Route path="/contact" element={<ContactPage />} />
-          
-          {/* 投稿一覧ページ (認証ガード: ログインしていない場合はログイン画面へリダイレクト) */}
-          <Route 
-            path="/posts" 
-            element={
-              isAuthenticated ? (
-                <PostsPage />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            } 
-          />
-
-          {/* 存在しないURLにアクセスした場合はトップへ飛ばす */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      {/* メインコンテンツ：背景を少しグレーにして浮かび上がらせる */}
+      <main className="min-h-screen bg-gray-50 pt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Routes>
+            <Route path="/" element={<LoginPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route 
+              path="/posts" 
+              element={isAuthenticated ? <PostsPage /> : <Navigate to="/" replace />} 
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </main>
     </BrowserRouter>
   );

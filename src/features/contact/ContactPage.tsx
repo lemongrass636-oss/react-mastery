@@ -1,59 +1,58 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+// 1. 作成した Input と Button をインポート
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
-// 1. バリデーションの「ルール」を定義
 const contactSchema = z.object({
   username: z.string().min(2, '名前は2文字以上で入力してください'),
-  email: z.string().email('正しいメールアドレス形式で入力してください'),
+  email: z.string().email('正しいメールアドレスを入力してください'),
   message: z.string().min(10, 'メッセージは10文字以上入力してください'),
 });
 
-// 2. ルールから「型」を自動生成（TypeScriptの恩恵）
 type ContactFormData = z.infer<typeof contactSchema>;
 
 export const ContactPage = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ContactFormData>({
-    resolver: zodResolver(contactSchema), // Zodを紐付け
+  const { register, handleSubmit, formState: { errors } } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
   });
 
   const onSubmit = (data: ContactFormData) => {
-    console.log('送信成功！:', data);
-    alert('お問い合わせを送信しました');
+    console.log(data);
+    alert('送信されました！');
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Contact Us</h2>
+    <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-sm border border-gray-100">
+      <h2 className="text-2xl font-bold mb-6">Contact Us</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-          <input 
-            {...register('username')} 
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-          />
-          {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username.message}</p>}
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Name</label>
+          {/* 2. <input> を <Input /> に変更 */}
+          <Input {...register('username')} placeholder="田中 太郎" />
+          {errors.username && <p className="text-red-500 text-xs">{errors.username.message}</p>}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input 
-            {...register('email')} 
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-          />
-          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Email</label>
+          <Input {...register('email')} type="email" placeholder="example@mail.com" />
+          {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
         </div>
 
-        <button 
-          type="submit" 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 ease-in-out shadow-md"
-        >
-          Submit
-        </button>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Message</label>
+          {/* テキストエリアもInputと同じスタイルを当てるか、別途Textareaを作るのもアリです */}
+          <textarea 
+            {...register('message')} 
+            className="flex min-h-[100px] w-full rounded-md border border-gray-200 bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+            placeholder="お問い合わせ内容を入力してください"
+          />
+          {errors.message && <p className="text-red-500 text-xs">{errors.message.message}</p>}
+        </div>
+
+        <Button type="submit" className="w-full">Send Message</Button>
       </form>
     </div>
   );

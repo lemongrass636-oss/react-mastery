@@ -3,6 +3,7 @@ import { useAuthStore } from './store/useAuthStore';
 import { LoginPage } from './features/auth/LoginPage';
 import { PostsPage } from './features/posts/PostsPage';
 import { ContactPage } from './features/contact/ContactPage';
+import { Button } from "@/components/ui/button";
 
 function App() {
   const { isAuthenticated, logout, user } = useAuthStore();

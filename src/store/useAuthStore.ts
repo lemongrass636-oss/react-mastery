@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 
-// ユーザー情報の型定義
 interface User {
   id: string;
   name: string;
@@ -12,13 +11,17 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (user: User) => void;
   logout: () => void;
+  // 1. プロフィール更新用のアクションを追加
+  updateProfile: (newName: string) => void; 
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
-  // ログインアクション
   login: (user) => set({ user, isAuthenticated: true }),
-  // ログアウトアクション
   logout: () => set({ user: null, isAuthenticated: false }),
+  // 2. 実装：既存のuser情報をコピーしつつ、nameだけ上書きする
+  updateProfile: (newName) => set((state) => ({
+    user: state.user ? { ...state.user, name: newName } : null
+  })),
 }));

@@ -3,6 +3,7 @@ import { useAuthStore } from './store/useAuthStore';
 import { LoginPage } from './features/auth/LoginPage';
 import { PostsPage } from './features/posts/PostsPage';
 import { ContactPage } from './features/contact/ContactPage';
+import { ProfilePage } from './features/profile/ProfilePage'; // 追加
 import { Button } from "@/components/ui/button";
 
 function App() {
@@ -33,6 +34,15 @@ function App() {
                   <span className="hidden sm:inline text-sm text-gray-500">
                     Welcome, <span className="font-semibold text-gray-900">{user?.name}</span>
                   </span>
+                  
+                  {/* 【追加】マイページへのリンク */}
+                  <Link 
+                    to="/profile" 
+                    className="text-sm font-medium text-gray-600 hover:text-blue-600 transition"
+                  >
+                    My Page
+                  </Link>
+
                   <button 
                     onClick={logout}
                     className="bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-all border border-transparent hover:border-red-100"
@@ -60,10 +70,19 @@ function App() {
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            
+            {/* 投稿一覧ページ（認証が必要） */}
             <Route 
               path="/posts" 
               element={isAuthenticated ? <PostsPage /> : <Navigate to="/" replace />} 
             />
+
+            {/* 【追加】プロフィールページ（認証が必要） */}
+            <Route 
+              path="/profile" 
+              element={isAuthenticated ? <ProfilePage /> : <Navigate to="/" replace />} 
+            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

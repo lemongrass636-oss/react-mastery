@@ -22,6 +22,7 @@ interface AuthState {
   logout: () => void;
   updateProfile: (newName: string) => void;
   addPost: (content: string) => void;
+  deletePost: (id: string) => void;
 }
 
 // 2. persist で全体を囲みます
@@ -56,6 +57,11 @@ export const useAuthStore = create<AuthState>()(
           },
           ...state.posts,
         ]
+      })),
+      // --- 削除アクション ---
+      // 指定されたID以外の投稿だけを残す（filterを使う）
+      deletePost: (id) => set((state) => ({
+        posts: state.posts.filter((post) => post.id !== id)
       })),
     }),
     {

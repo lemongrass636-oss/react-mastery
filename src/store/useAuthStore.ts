@@ -1,52 +1,71 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware'; // 1. persist をインポート
+import { persist } from 'zustand/middleware';
 
+// ユーザー情報の型定義
 interface User {
   id: string;
   name: string;
   email: string;
 }
 
+// 投稿情報の型定義
 interface Post {
   id: string;
   authorName: string;
   content: string;
   createdAt: string;
+  likes: number; // 追加：いいね数
 }
 
+// ストア全体の型定義
 interface AuthState {
+  // 状態
   user: User | null;
   isAuthenticated: boolean;
   posts: Post[];
+
+  // アクション
   login: (user: User) => void;
   logout: () => void;
   updateProfile: (newName: string) => void;
   addPost: (content: string) => void;
   deletePost: (id: string) => void;
+  toggleLike: (id: string) => void; // 追加：いいね切り替え
 }
 
-// 2. persist で全体を囲みます
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
+      // --- 初期状態 ---
       user: null,
       isAuthenticated: false,
       posts: [
         { 
           id: '1', 
           authorName: 'System', 
-          content: 'Welcome to your persistent feed!', 
-          createdAt: new Date().toLocaleTimeString() 
+          content: 'Welcome to your persistent feed with icons! Try clicking the heart.', 
+          createdAt: new Date().toLocaleTimeString(),
+          likes: 0
         }
       ],
 
-      login: (user) => set({ user, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
-      
+      // --- ログイン・ログアウト ---
+      login: (user) => set({ 
+        user, 
+        isAuthenticated: true 
+      }),
+
+      logout: () => set({ 
+        user: null, 
+        isAuthenticated: false 
+      }),
+
+      // --- プロフィール更新 ---
       updateProfile: (newName) => set((state) => ({
         user: state.user ? { ...state.user, name: newName } : null
       })),
 
+      // --- 新規投稿追加 ---
       addPost: (content) => set((state) => ({
         posts: [
           {
@@ -54,18 +73,27 @@ export const useAuthStore = create<AuthState>()(
             authorName: state.user?.name || 'Anonymous',
             content,
             createdAt: new Date().toLocaleTimeString(),
+            likes: 0, // 投稿時は0からスタート
           },
           ...state.posts,
         ]
       })),
-      // --- 削除アクション ---
-      // 指定されたID以外の投稿だけを残す（filterを使う）
+
+      // --- 投稿削除 ---
       deletePost: (id) => set((state) => ({
         posts: state.posts.filter((post) => post.id !== id)
       })),
+
+      // --- いいね機能 ---
+      // 指定されたIDの投稿を探し、likesカウントを +1 する
+      toggleLike: (id) => set((state) => ({
+        posts: state.posts.map((post) => 
+          post.id === id ? { ...post, likes: post.likes + 1 } : post
+        )
+      })),
     }),
     {
-      name: 'my-app-storage', // 3. localStorage に保存される際のキー名（何でもOK）
+      name: 'my-app-storage', // localStorageのキー名
     }
   )
 );

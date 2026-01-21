@@ -31,7 +31,7 @@ export const ContactPage = () => {
         <div className="space-y-2">
           <label className="text-sm font-medium">Name</label>
           {/* 2. <input> を <Input /> に変更 */}
-          <Input {...register('username')} placeholder="田中 太郎" />
+          <Input {...register('username')} placeholder="司波　達也" />
           {errors.username && <p className="text-red-500 text-xs">{errors.username.message}</p>}
         </div>
 

@@ -52,9 +52,9 @@ export const PostsPage = () => {
           </div>
         ) : (
           posts.map((post) => {
-            // 【重要】自分がこの投稿をいいねしているかを判定
-            console.log(post);
-            const isLikedByMe = post.likedBy.includes(user?.email || "");
+            // 【安全策】もし post.likedBy が配列でない場合に備えて空配列をデフォルトにする
+            const likedUsers = Array.isArray(post.likedBy) ? post.likedBy : [];
+            const isLikedByMe = likedUsers.includes(user?.email || "");
 
             return (
               <div 
@@ -62,7 +62,7 @@ export const PostsPage = () => {
                 className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm group transition-all hover:shadow-md"
               >
                 <div className="flex gap-4">
-                  <Avatar fallback={post.authorName[0]} className="h-10 w-10 shrink-0" />
+                  <Avatar fallback={post.authorName?.[0] || '?'} className="h-10 w-10 shrink-0" />
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
@@ -71,7 +71,7 @@ export const PostsPage = () => {
                         <span className="text-[10px] text-gray-400">{post.createdAt}</span>
                       </div>
 
-                      {/* 自分の投稿なら削除ボタンを表示 */}
+                      {/* 削除ボタン */}
                       {user?.email === post.authorId && (
                         <button
                           onClick={() => {
@@ -90,7 +90,7 @@ export const PostsPage = () => {
                       {post.content}
                     </p>
 
-                    {/* --- アクションバー（いいね機能） --- */}
+                    {/* --- いいねボタン --- */}
                     <div className="mt-4 flex items-center gap-6">
                       <button 
                         onClick={() => toggleLike(post.id)}
@@ -98,7 +98,6 @@ export const PostsPage = () => {
                           isLikedByMe ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'
                         }`}
                       >
-                        {/* 自分がいいねしていたら塗りつぶし、クリック時に少し弾むアニメーション */}
                         <Heart 
                           className={`h-4 w-4 transition-all active:scale-150 ${
                             isLikedByMe 
@@ -107,7 +106,7 @@ export const PostsPage = () => {
                           }`} 
                         />
                         <span className={`text-xs font-bold ${isLikedByMe ? 'text-pink-500' : ''}`}>
-                          {post.likedBy.length}
+                          {likedUsers.length}
                         </span>
                       </button>
                     </div>

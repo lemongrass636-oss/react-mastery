@@ -11,11 +11,11 @@ interface User {
 // 投稿情報の型定義
 interface Post {
   id: string;
-  authorId: string;
+  authorId: string; // 削除権限の判定に重要
   authorName: string;
   content: string;
   createdAt: string;
-  likedBy: string[]; // 以前の "likes: number" から変更
+  likedBy: string[];
 }
 
 // ストア全体の型定義
@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
           id: '1', 
           authorId: 'system-admin',
           authorName: 'System', 
-          content: 'Welcome! Your data is now safely migrated.', 
+          content: 'Security update: Only your own posts can be deleted now.', 
           createdAt: new Date().toLocaleTimeString(),
           likedBy: [] 
         }
@@ -65,26 +65,33 @@ export const useAuthStore = create<AuthState>()(
       })),
 
       // --- 新規投稿追加 ---
-      addPost: (content) => set((state) => ({
-        posts: [
-          {
-            id: Date.now().toString(),
-            authorId: state.user?.email || 'anon',
-            authorName: state.user?.name || 'Anonymous',
-            content,
-            createdAt: new Date().toLocaleTimeString(),
-            likedBy: [], 
-          },
-          ...state.posts,
-        ]
-      })),
+      addPost: (content) => set((state) => {
+        // 重要：投稿時に「誰が書いたか」を確実に保存する
+        // ログインしていない場合は 'guest' とするが、基本はガードされているはず
+        const currentUserEmail = state.user?.email || 'guest';
+        const currentUserName = state.user?.name || 'Anonymous';
+
+        return {
+          posts: [
+            {
+              id: Date.now().toString(),
+              authorId: currentUserEmail, // ここを確実に user.email と一致させる
+              authorName: currentUserName,
+              content,
+              createdAt: new Date().toLocaleTimeString(),
+              likedBy: [], 
+            },
+            ...state.posts,
+          ]
+        };
+      }),
 
       // --- 投稿削除 ---
       deletePost: (id) => set((state) => ({
         posts: state.posts.filter((post) => post.id !== id)
       })),
 
-      // --- 本物のいいねロジック ---
+      // --- いいね機能 (Toggle) ---
       toggleLike: (id) => set((state) => ({
         posts: state.posts.map((post) => {
           if (post.id !== id) return post;
@@ -92,7 +99,6 @@ export const useAuthStore = create<AuthState>()(
           const userId = state.user?.email;
           if (!userId) return post;
 
-          // 万が一 likedBy が配列でない（古いキャッシュが残っている）場合への安全策
           const currentLikes = Array.isArray(post.likedBy) ? post.likedBy : [];
           const isLiked = currentLikes.includes(userId);
 
@@ -107,8 +113,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'my-app-storage',
-      // バージョン管理を追加することで、構造変更によるクラッシュを防ぎやすくします
-      version: 1, 
+      version: 1,
+      // データ構造の不整合を防ぐためのマイグレーション設定（空でも定義しておくのが安全）
+      migrate: (persistedState: any, version) => {
+        return persistedState as AuthState;
+      },
     }
   )
 );

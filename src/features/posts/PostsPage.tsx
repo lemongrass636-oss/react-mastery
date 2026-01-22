@@ -53,6 +53,7 @@ export const PostsPage = () => {
         ) : (
           posts.map((post) => {
             // 【重要】自分がこの投稿をいいねしているかを判定
+            console.log(post);
             const isLikedByMe = post.likedBy.includes(user?.email || "");
 
             return (

@@ -11,26 +11,27 @@ interface User {
 // 投稿情報の型定義
 interface Post {
   id: string;
+  authorId: string; // 投稿者を特定するためのID
   authorName: string;
   content: string;
   createdAt: string;
-  likes: number; // 追加：いいね数
+  likedBy: string[]; // 変更：いいねした人のユーザーID（emailなど）を格納する配列
 }
 
 // ストア全体の型定義
 interface AuthState {
-  // 状態
+  // 状態（State）
   user: User | null;
   isAuthenticated: boolean;
   posts: Post[];
 
-  // アクション
+  // アクション（関数）
   login: (user: User) => void;
   logout: () => void;
   updateProfile: (newName: string) => void;
   addPost: (content: string) => void;
   deletePost: (id: string) => void;
-  toggleLike: (id: string) => void; // 追加：いいね切り替え
+  toggleLike: (id: string) => void; // 本格的ないいね切り替えアクション
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -42,10 +43,11 @@ export const useAuthStore = create<AuthState>()(
       posts: [
         { 
           id: '1', 
+          authorId: 'system-admin',
           authorName: 'System', 
-          content: 'Welcome to your persistent feed with icons! Try clicking the heart.', 
+          content: 'Welcome to your new persistent feed! One like per person only.', 
           createdAt: new Date().toLocaleTimeString(),
-          likes: 0
+          likedBy: [] 
         }
       ],
 
@@ -70,10 +72,11 @@ export const useAuthStore = create<AuthState>()(
         posts: [
           {
             id: Date.now().toString(),
+            authorId: state.user?.email || 'anon', // 投稿者の特定にemailを使用
             authorName: state.user?.name || 'Anonymous',
             content,
             createdAt: new Date().toLocaleTimeString(),
-            likes: 0, // 投稿時は0からスタート
+            likedBy: [], // 最初は誰もいいねしていない
           },
           ...state.posts,
         ]
@@ -84,16 +87,29 @@ export const useAuthStore = create<AuthState>()(
         posts: state.posts.filter((post) => post.id !== id)
       })),
 
-      // --- いいね機能 ---
-      // 指定されたIDの投稿を探し、likesカウントを +1 する
+      // --- 本物のいいねロジック (Toggle) ---
       toggleLike: (id) => set((state) => ({
-        posts: state.posts.map((post) => 
-          post.id === id ? { ...post, likes: post.likes + 1 } : post
-        )
+        posts: state.posts.map((post) => {
+          if (post.id !== id) return post;
+
+          // ログイン中のユーザーを特定するID（email）を取得
+          const userId = state.user?.email;
+          if (!userId) return post; // ログインしていなければ何もしない
+
+          // すでに自分がいいねしているかチェック
+          const isLiked = post.likedBy.includes(userId);
+
+          return {
+            ...post,
+            likedBy: isLiked
+              ? post.likedBy.filter((uid) => uid !== userId) // すでにいいねしてたら配列から削除（解除）
+              : [...post.likedBy, userId] // していなければ配列に追加
+          };
+        })
       })),
     }),
     {
-      name: 'my-app-storage', // localStorageのキー名
+      name: 'my-app-storage', // localStorageのキー
     }
   )
 );

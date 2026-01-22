@@ -3,19 +3,16 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
-// アイコンをインポート
 import { Heart, Trash2, Send } from 'lucide-react';
 
 export const PostsPage = () => {
-  // ストアから状態とアクションを取得
   const { user, posts, addPost, deletePost, toggleLike } = useAuthStore();
   const [newPost, setNewPost] = useState('');
 
-  // 投稿処理
   const handlePost = () => {
     if (!newPost.trim()) return;
     addPost(newPost);
-    setNewPost(''); // 入力欄をクリア
+    setNewPost('');
   };
 
   return (
@@ -30,7 +27,6 @@ export const PostsPage = () => {
             value={newPost}
             onChange={(e) => setNewPost(e.target.value)}
             onKeyDown={(e) => {
-              // 日本語入力の確定（Enter）で送信されないように対策
               if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
                 handlePost();
               }
@@ -55,62 +51,70 @@ export const PostsPage = () => {
             まだ投稿がありません。
           </div>
         ) : (
-          posts.map((post) => (
-            <div 
-              key={post.id} 
-              className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm group transition-all hover:shadow-md"
-            >
-              <div className="flex gap-4">
-                {/* アバター */}
-                <Avatar fallback={post.authorName[0]} className="h-10 w-10 shrink-0" />
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-gray-900 truncate">{post.authorName}</span>
-                      <span className="text-[10px] text-gray-400">{post.createdAt}</span>
-                    </div>
+          posts.map((post) => {
+            // 【重要】自分がこの投稿をいいねしているかを判定
+            const isLikedByMe = post.likedBy.includes(user?.email || "");
 
-                    {/* 自分の投稿なら削除（ゴミ箱）アイコンを表示 */}
-                    {user?.name === post.authorName && (
-                      <button
-                        onClick={() => {
-                          if (window.confirm('この投稿を削除しますか？')) {
-                            deletePost(post.id);
-                          }
-                        }}
-                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
+            return (
+              <div 
+                key={post.id} 
+                className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm group transition-all hover:shadow-md"
+              >
+                <div className="flex gap-4">
+                  <Avatar fallback={post.authorName[0]} className="h-10 w-10 shrink-0" />
                   
-                  {/* 本文 */}
-                  <p className="mt-2 text-gray-800 leading-relaxed break-words">
-                    {post.content}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 truncate">{post.authorName}</span>
+                        <span className="text-[10px] text-gray-400">{post.createdAt}</span>
+                      </div>
 
-                  {/* アクションバー（いいね） */}
-                  <div className="mt-4 flex items-center gap-6">
-                    <button 
-                      onClick={() => toggleLike(post.id)}
-                      className="flex items-center gap-1.5 text-gray-400 hover:text-pink-500 transition-colors group/like"
-                    >
-                      <Heart 
-                        className={`h-4 w-4 transition-all ${
-                          post.likes > 0 ? 'fill-pink-500 text-pink-500 scale-110' : 'group-hover/like:scale-110'
-                        }`} 
-                      />
-                      <span className={`text-xs font-medium ${post.likes > 0 ? 'text-pink-500' : ''}`}>
-                        {post.likes}
-                      </span>
-                    </button>
+                      {/* 自分の投稿なら削除ボタンを表示 */}
+                      {user?.email === post.authorId && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm('この投稿を削除しますか？')) {
+                              deletePost(post.id);
+                            }
+                          }}
+                          className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    
+                    <p className="mt-2 text-gray-800 leading-relaxed break-words">
+                      {post.content}
+                    </p>
+
+                    {/* --- アクションバー（いいね機能） --- */}
+                    <div className="mt-4 flex items-center gap-6">
+                      <button 
+                        onClick={() => toggleLike(post.id)}
+                        className={`flex items-center gap-1.5 transition-colors group/like ${
+                          isLikedByMe ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'
+                        }`}
+                      >
+                        {/* 自分がいいねしていたら塗りつぶし、クリック時に少し弾むアニメーション */}
+                        <Heart 
+                          className={`h-4 w-4 transition-all active:scale-150 ${
+                            isLikedByMe 
+                              ? 'fill-pink-500 text-pink-500' 
+                              : 'group-hover/like:scale-110'
+                          }`} 
+                        />
+                        <span className={`text-xs font-bold ${isLikedByMe ? 'text-pink-500' : ''}`}>
+                          {post.likedBy.length}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
